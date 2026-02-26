@@ -1,14 +1,14 @@
 //+------------------------------------------------------------------+
-//| GBPJPY - GFTEA.mq5                                               |
+//| PDH_PDL_Breakout_SingleSymbol_MonthlyFilter.mq5                  |
 //|                                                                  |
 //| - Trades ONE symbol only (chart symbol by default)               |
 //| - BuyStop @ PDH, SellStop @ PDL (yesterday levels)               |
-//| - Places orders once per day AFTER PlaceHour:PlaceMinute         |
-//| - Close & delete pendings at CloseHour:CloseMinute               |
-//| - Weekday filter (server time)                                   |
+//| - Places orders once per day AFTER PlaceHour:PlaceMinute          |
+//| - Close & delete pendings at CloseHour:CloseMinute                |
+//| - MONTHLY filter (server time)                                   |
 //| - ATR FILTER: FIVE SELECTABLE BANDS (each has its own ON/OFF)    |
 //| - ATR TF + Period are INPUTS                                     |
-//| - Simple CSV logs: time_server,symbol,event,atr_points,profit    |
+//| - Simple CSV logs: time_server,symbol,event,atr_points,profit     |
 //+------------------------------------------------------------------+
 #property strict
 #include <Trade/Trade.mqh>
@@ -91,16 +91,21 @@ input int PlaceMinute = 6;
 input int CloseHour   = 17;
 input int CloseMinute = 50;
 
-//=================== WEEKDAY FILTER ===================
-input string __DAYS__ = "===== WEEKDAY FILTER (SERVER) =====";
-// day_of_week: 0=Sun..6=Sat
-input bool Trade_Mon = true;
-input bool Trade_Tue = true;
-input bool Trade_Wed = true;
-input bool Trade_Thu = true;
-input bool Trade_Fri = true;
-input bool Trade_Sat = false;
-input bool Trade_Sun = false;
+//=================== MONTHLY FILTER ===================
+input string __MONTHS__ = "===== MONTHLY FILTER (SERVER) =====";
+// months: 1=January..12=December
+input bool Trade_January   = true;
+input bool Trade_February  = true;
+input bool Trade_March     = true;
+input bool Trade_April     = true;
+input bool Trade_May       = true;
+input bool Trade_June      = true;
+input bool Trade_July      = true;
+input bool Trade_August    = true;
+input bool Trade_September = true;
+input bool Trade_October   = true;
+input bool Trade_November  = true;
+input bool Trade_December  = true;
 
 //=================== MAGIC ===================
 input string __MAGIC__ = "===== MAGIC =====";
@@ -126,17 +131,22 @@ string GetTradeSymbol()
 double GetPDH(const string sym){ return iHigh(sym, PERIOD_D1, 1); }
 double GetPDL(const string sym){ return iLow(sym,  PERIOD_D1, 1); }
 
-bool IsDayAllowed(const int dow) // 0=Sun..6=Sat
+bool IsMonthAllowed(const int month) // 1=Jan..12=Dec
 {
-   switch(dow)
+   switch(month)
    {
-      case 0: return Trade_Sun;
-      case 1: return Trade_Mon;
-      case 2: return Trade_Tue;
-      case 3: return Trade_Wed;
-      case 4: return Trade_Thu;
-      case 5: return Trade_Fri;
-      case 6: return Trade_Sat;
+      case 1:  return Trade_January;
+      case 2:  return Trade_February;
+      case 3:  return Trade_March;
+      case 4:  return Trade_April;
+      case 5:  return Trade_May;
+      case 6:  return Trade_June;
+      case 7:  return Trade_July;
+      case 8:  return Trade_August;
+      case 9:  return Trade_September;
+      case 10: return Trade_October;
+      case 11: return Trade_November;
+      case 12: return Trade_December;
    }
    return true;
 }
@@ -445,12 +455,12 @@ void OnTick()
 
       if(nowMins >= placeMins)
       {
-         // weekday filter
-         if(!IsDayAllowed(t.day_of_week))
+         // MONTHLY filter (replaces weekday filter)
+         if(!IsMonthAllowed(t.mon))
          {
             DeleteAllPendings(sym);
             placedToday = true;
-            if(LogSkips) LogCSV(sym, "skip_weekday", 0.0, 0.0);
+            if(LogSkips) LogCSV(sym, "skip_month", 0.0, 0.0);
             return;
          }
 
